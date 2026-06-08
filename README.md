@@ -29,7 +29,7 @@ The service listens on **http://localhost:8086**.
 - H2 console: http://localhost:8086/h2-console (JDBC URL `jdbc:h2:mem:refunds`, user `sa`, no password)
 - Health: http://localhost:8086/health
 
-Run the tests (11 tests covering the refund maths and the service rules):
+Run the tests (13 tests covering the refund maths and the service rules):
 
 ```bash
 mvn test
