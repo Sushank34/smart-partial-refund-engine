@@ -40,7 +40,7 @@ public class DataSeeder implements CommandLineRunner {
         seed("ord_1001", "USD", "USD", "1", split(PaymentMethod.WALLET, "500.00"));
         seed("ord_1002", "USD", "PEN", "3.75", split(PaymentMethod.CREDIT_CARD, "1200.00"));
         seed("ord_1003", "PEN", "PEN", "1", split(PaymentMethod.BANK_TRANSFER, "850.00"));
-        seed("ord_1004", "USD", "COP", "3950.50", split(PaymentMethod.DEBIT_CARD, "75.00"));
+        seed("ord_1004", "USD", "COP", "3950.50", split(PaymentMethod.DEBIT_CARD, "50.00"));
         seed("ord_1005", "EUR", "USD", "1.08", split(PaymentMethod.WALLET, "2000.00"));
 
         // --- 5 two-method orders ---
@@ -63,8 +63,8 @@ public class DataSeeder implements CommandLineRunner {
                 split(PaymentMethod.WALLET, "800.00"), split(PaymentMethod.CREDIT_CARD, "700.00"),
                 split(PaymentMethod.DEBIT_CARD, "500.00"));
         seed("ord_1013", "USD", "USD", "1",
-                split(PaymentMethod.WALLET, "1000.00"), split(PaymentMethod.CREDIT_CARD, "1000.00"),
-                split(PaymentMethod.DEBIT_CARD, "1000.00"), split(PaymentMethod.BANK_TRANSFER, "1000.00"));
+                split(PaymentMethod.WALLET, "1250.00"), split(PaymentMethod.CREDIT_CARD, "1250.00"),
+                split(PaymentMethod.DEBIT_CARD, "1250.00"), split(PaymentMethod.BANK_TRANSFER, "1250.00"));
         // Even three-way split — the classic case where naive rounding loses a cent.
         seed("ord_1014", "EUR", "USD", "1.08",
                 split(PaymentMethod.WALLET, "100.00"), split(PaymentMethod.CREDIT_CARD, "100.00"),
@@ -72,6 +72,10 @@ public class DataSeeder implements CommandLineRunner {
         seed("ord_1015", "USD", "PEN", "3.75",
                 split(PaymentMethod.WALLET, "150.00"), split(PaymentMethod.CREDIT_CARD, "100.00"),
                 split(PaymentMethod.BANK_TRANSFER, "83.33"));
+
+        // Bolivia (BOB) — completes the four operating markets (PEN, COP, USD, BOB).
+        seed("ord_1016", "USD", "BOB", "6.90",
+                split(PaymentMethod.WALLET, "180.00"), split(PaymentMethod.CREDIT_CARD, "120.00"));
 
         // --- Pre-existing partial refunds, to demonstrate the audit trail ---
         refundService.requestRefund("ord_1006",

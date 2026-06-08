@@ -35,6 +35,18 @@ curl -X POST http://localhost:8086/api/orders -H 'Content-Type: application/json
 
 ---
 
+## GET /api/orders
+
+List all orders — useful for discovering the seeded demo data.
+
+**200 OK** → array of [OrderResponse](#orderresponse).
+
+```bash
+curl http://localhost:8086/api/orders
+```
+
+---
+
 ## GET /api/orders/{orderId}
 
 **200 OK** → [OrderResponse](#orderresponse). **404** `ORDER_NOT_FOUND` if unknown.

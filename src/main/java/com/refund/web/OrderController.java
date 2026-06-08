@@ -5,6 +5,7 @@ import com.refund.service.RefundService;
 import com.refund.web.dto.CreateOrderRequest;
 import com.refund.web.dto.OrderResponse;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,11 @@ public class OrderController {
     public ResponseEntity<OrderResponse> create(@Valid @RequestBody CreateOrderRequest request) {
         Order order = refundService.createOrder(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(OrderResponse.from(order));
+    }
+
+    @GetMapping
+    public List<OrderResponse> list() {
+        return refundService.listOrders().stream().map(OrderResponse::from).toList();
     }
 
     @GetMapping("/{orderId}")

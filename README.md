@@ -1,5 +1,7 @@
 # Smart Partial Refund Engine
 
+[![CI](https://github.com/Sushank34/smart-partial-refund-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Sushank34/smart-partial-refund-engine/actions/workflows/ci.yml)
+
 A backend service that handles complex partial-refund scenarios for B2B / marketplace orders:
 proportional distribution across split payment methods, multi-currency conversion at the
 **historical** exchange rate, and a complete, queryable audit trail — with no cents ever lost
@@ -95,6 +97,7 @@ Base URL: `http://localhost:8086`. All amounts are major units (e.g. `300.00`). 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/orders` | Record an order with payment splits + currency info |
+| `GET`  | `/api/orders` | List all orders (handy for discovering the seeded demo data) |
 | `GET`  | `/api/orders/{orderId}` | Fetch an order and its remaining refundable balance |
 | `POST` | `/api/orders/{orderId}/refunds` | Issue a partial refund; returns the breakdown |
 | `GET`  | `/api/orders/{orderId}/refunds` | Retrieve the full refund history |
@@ -177,16 +180,17 @@ Consistent envelope `{ "status", "code", "error" }`:
 
 ## Test data
 
-[`DataSeeder`](src/main/java/com/refund/config/DataSeeder.java) loads 15 orders on startup:
+[`DataSeeder`](src/main/java/com/refund/config/DataSeeder.java) loads 16 orders on startup:
 
 - **`ord_1001`–`ord_1005`** — single payment method
 - **`ord_1006`–`ord_1010`** — two methods
 - **`ord_1011`–`ord_1015`** — three or four methods
+- **`ord_1016`** — a Bolivia (BOB) order, completing the four operating markets
 
-across four currency pairings (USD→PEN `3.75`, USD→COP `3950.50`, EUR→USD `1.08`, and
-same-currency at `1`), with amounts from `$75` to `$4000`. `ord_1006` arrives with one prior
-refund and `ord_1011` with two, to exercise the audit trail out of the box. `ord_1014` is an even
-three-way split — the canonical rounding edge case.
+across five currency pairings — USD→PEN `3.75`, USD→COP `3950.50`, EUR→USD `1.08`, USD→BOB `6.90`,
+and same-currency at `1` — with amounts spanning `$50` to `$5,000`. `ord_1006` arrives with one
+prior refund and `ord_1011` with two, to exercise the audit trail out of the box. `ord_1014` is an
+even three-way split — the canonical rounding edge case. Browse them all via `GET /api/orders`.
 
 ---
 

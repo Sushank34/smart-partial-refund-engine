@@ -50,6 +50,10 @@ public class RefundService {
         return orderRepository.save(order);
     }
 
+    public List<Order> listOrders() {
+        return orderRepository.findAll();
+    }
+
     public Order getOrder(String orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> ApiException.notFound("ORDER_NOT_FOUND", "No order with id " + orderId + "."));
