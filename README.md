@@ -16,7 +16,7 @@ Built for the Andino Wholesale challenge. Spring Boot 3 · Java 17 · in-memory 
 Requires JDK 17+ and Maven.
 
 ```bash
-# 1. Run the service (seeds 15 demo orders on startup)
+# 1. Run the service (seeds 16 demo orders on startup)
 mvn spring-boot:run
 
 # 2. In another terminal, exercise all three core requirements end-to-end
@@ -221,7 +221,7 @@ flowchart TD
     end
 
     DB[("H2 in-memory<br/>orders · payment_splits<br/>refunds · refund_allocations")]
-    SEED[DataSeeder<br/>15 demo orders]
+    SEED[DataSeeder<br/>16 demo orders]
 
     Client -->|JSON| OC & RC
     OC --> RS
@@ -288,4 +288,3 @@ com.refund
 - **In-memory H2 with `create-drop`.** Data resets each run; re-seeded on startup. No auth (per brief).
 - **`FLAGGED` refunds are still recorded.** The brief says "flag it or suggest an adjustment" — we
   flag and proceed rather than block, leaving the operational decision to a human.
-```

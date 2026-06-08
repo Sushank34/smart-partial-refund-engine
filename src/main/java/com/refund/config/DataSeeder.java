@@ -17,9 +17,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 /**
- * Seeds a demonstration dataset on startup: 15 orders spanning single, two, and three-plus
- * payment methods across four currency pairs (USD→PEN, USD→COP, EUR→USD, and same-currency),
- * with a couple of orders pre-loaded with partial refunds to exercise the audit trail.
+ * Seeds a demonstration dataset on startup: 16 orders spanning single, two, and three-plus
+ * payment methods across five currency pairs (USD→PEN, USD→COP, EUR→USD, USD→BOB, and
+ * same-currency), with a couple of orders pre-loaded with partial refunds to exercise the
+ * audit trail.
  */
 @Component
 public class DataSeeder implements CommandLineRunner {

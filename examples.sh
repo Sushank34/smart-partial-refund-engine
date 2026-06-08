@@ -11,7 +11,7 @@ BASE="${BASE:-http://localhost:8086}"
 pretty() { if command -v jq >/dev/null 2>&1; then jq .; else cat; fi; }
 hr() { printf '\n=== %s ===\n' "$1"; }
 
-hr "1. PROPORTIONAL DISTRIBUTION — create an order paid 50%% wallet / 30%% card / 20%% bank (USD→PEN @ 3.75)"
+hr "1. PROPORTIONAL DISTRIBUTION — create an order paid 50% wallet / 30% card / 20% bank (USD→PEN @ 3.75)"
 ORDER=$(curl -s -X POST "$BASE/api/orders" -H 'Content-Type: application/json' -d '{
   "displayCurrency": "USD",
   "processingCurrency": "PEN",
