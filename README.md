@@ -53,10 +53,12 @@ rate `3.75` and each allocation shows both the USD figure and its PEN equivalent
 allocations also summing exactly to `1125.00 PEN`.
 
 ### 3. Refund audit trail
-Every refund is persisted as an immutable record — order id, requested amount (both currencies),
-reason code, status, timestamp, and the full per-method breakdown. Issue many partial refunds on
-one order and `GET …/refunds` returns the complete history, oldest first. Refunds can never exceed
-the order's remaining balance.
+Every refund is persisted as a self-contained, immutable record — order id, requested amount (both
+currencies), the exchange rate and currencies in effect at the time, reason code, status,
+timestamp, and the full per-method breakdown. Snapshotting the rate means the audit row stands on
+its own even if the order is later amended. Issue many partial refunds on one order and
+`GET …/refunds` returns the complete history, oldest first. Refunds can never exceed the order's
+remaining balance.
 
 ---
 
@@ -139,6 +141,7 @@ Response (abridged):
   "status": "COMPLETED",
   "displayCurrency": "USD",
   "processingCurrency": "PEN",
+  "exchangeRate": 3.75,
   "requestedDisplayAmount": 300.00,
   "requestedProcessingAmount": 1125.00,
   "allocations": [
@@ -159,6 +162,7 @@ Consistent envelope `{ "status", "code", "error" }`:
 | Scenario | HTTP | code |
 | --- | --- | --- |
 | Refund exceeds remaining balance | 422 | `EXCEEDS_REFUNDABLE` |
+| Concurrent refund raced on the same order | 409 | `CONCURRENT_MODIFICATION` |
 | Unknown order | 404 | `ORDER_NOT_FOUND` |
 | Missing rate across currencies | 422 | `EXCHANGE_RATE_REQUIRED` |
 | Non-positive / missing amount | 400 | `VALIDATION_ERROR` |
@@ -272,8 +276,12 @@ com.refund
   functions so it is trivially testable in isolation.
 - **Integer minor units everywhere.** The single most important correctness decision — no
   `double`, no accumulated float error.
-- **Allocations persisted, not recomputed.** Each refund stores its own breakdown, so history is a
-  faithful audit record even if rates or rules later change.
+- **Allocations persisted, not recomputed.** Each refund stores its own breakdown (and the FX rate
+  in effect), so history is a faithful audit record even if rates or rules later change.
+- **Optimistic locking on the order balance.** The order carries a JPA `@Version`, so two refunds
+  racing on the same order can't both pass the remaining-balance check and over-refund — the loser
+  gets `409 CONCURRENT_MODIFICATION` and retries against fresh state. This directly guards the
+  over-refund failure mode the brief calls out.
 
 ### Assumptions & trade-offs (2-hour sprint)
 

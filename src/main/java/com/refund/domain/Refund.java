@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,14 @@ public class Refund {
     /** Requested amount converted to processing-currency minor units at the order's rate. */
     private long requestedProcessingMinor;
 
+    // Currency context snapshotted at refund time, so this audit record stands on its own
+    // even if the order is later amended.
+    private String displayCurrency;
+
+    private String processingCurrency;
+
+    private BigDecimal exchangeRate;
+
     @Enumerated(EnumType.STRING)
     private ReasonCode reasonCode;
 
@@ -52,12 +61,16 @@ public class Refund {
     }
 
     public Refund(String id, String orderId, long requestedAmountMinor, long requestedProcessingMinor,
+                  String displayCurrency, String processingCurrency, BigDecimal exchangeRate,
                   ReasonCode reasonCode, RefundStatus status, String note,
                   List<RefundAllocation> allocations, Instant createdAt) {
         this.id = id;
         this.orderId = orderId;
         this.requestedAmountMinor = requestedAmountMinor;
         this.requestedProcessingMinor = requestedProcessingMinor;
+        this.displayCurrency = displayCurrency;
+        this.processingCurrency = processingCurrency;
+        this.exchangeRate = exchangeRate;
         this.reasonCode = reasonCode;
         this.status = status;
         this.note = note;
@@ -79,6 +92,18 @@ public class Refund {
 
     public long getRequestedProcessingMinor() {
         return requestedProcessingMinor;
+    }
+
+    public String getDisplayCurrency() {
+        return displayCurrency;
+    }
+
+    public String getProcessingCurrency() {
+        return processingCurrency;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
     }
 
     public ReasonCode getReasonCode() {

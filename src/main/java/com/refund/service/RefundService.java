@@ -5,7 +5,6 @@ import com.refund.domain.PaymentSplit;
 import com.refund.domain.Refund;
 import com.refund.domain.RefundAllocation;
 import com.refund.domain.RefundStatus;
-import com.refund.domain.ReasonCode;
 import com.refund.exception.ApiException;
 import com.refund.repository.OrderRepository;
 import com.refund.repository.RefundRepository;
@@ -95,7 +94,8 @@ public class RefundService {
         String note = violations.isEmpty() ? null : String.join("; ", violations);
 
         Refund refund = new Refund("rf_" + shortId(), orderId, requestedMinor,
-                breakdown.requestedProcessingMinor(), req.reasonCode(), status, note, allocations, Instant.now());
+                breakdown.requestedProcessingMinor(), order.getDisplayCurrency(), order.getProcessingCurrency(),
+                order.getExchangeRate(), req.reasonCode(), status, note, allocations, Instant.now());
         refund = refundRepository.save(refund);
 
         order.applyRefund(requestedMinor);

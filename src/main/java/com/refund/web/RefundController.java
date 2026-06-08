@@ -1,6 +1,5 @@
 package com.refund.web;
 
-import com.refund.domain.Order;
 import com.refund.domain.Refund;
 import com.refund.service.RefundService;
 import com.refund.web.dto.CreateRefundRequest;
@@ -31,17 +30,13 @@ public class RefundController {
     public ResponseEntity<RefundResponse> create(@PathVariable String orderId,
                                                  @Valid @RequestBody CreateRefundRequest request) {
         Refund refund = refundService.requestRefund(orderId, request);
-        Order order = refundService.getOrder(orderId);
-        RefundResponse body =
-                RefundResponse.from(refund, order.getDisplayCurrency(), order.getProcessingCurrency());
-        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(RefundResponse.from(refund));
     }
 
     @GetMapping
     public List<RefundResponse> history(@PathVariable String orderId) {
-        Order order = refundService.getOrder(orderId);
         return refundService.getHistory(orderId).stream()
-                .map(r -> RefundResponse.from(r, order.getDisplayCurrency(), order.getProcessingCurrency()))
+                .map(RefundResponse::from)
                 .toList();
     }
 }

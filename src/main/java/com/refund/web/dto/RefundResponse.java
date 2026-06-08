@@ -21,6 +21,7 @@ public record RefundResponse(
         String note,
         String displayCurrency,
         String processingCurrency,
+        BigDecimal exchangeRate,
         BigDecimal requestedDisplayAmount,
         BigDecimal requestedProcessingAmount,
         List<AllocationView> allocations,
@@ -35,7 +36,7 @@ public record RefundResponse(
             int settlementDays) {
     }
 
-    public static RefundResponse from(Refund refund, String displayCurrency, String processingCurrency) {
+    public static RefundResponse from(Refund refund) {
         List<AllocationView> views = refund.getAllocations().stream()
                 .map(a -> new AllocationView(
                         a.getMethod(),
@@ -50,8 +51,9 @@ public record RefundResponse(
                 refund.getReasonCode(),
                 refund.getStatus(),
                 refund.getNote(),
-                displayCurrency,
-                processingCurrency,
+                refund.getDisplayCurrency(),
+                refund.getProcessingCurrency(),
+                refund.getExchangeRate(),
                 Money.toMajor(refund.getRequestedAmountMinor()),
                 Money.toMajor(refund.getRequestedProcessingMinor()),
                 views,

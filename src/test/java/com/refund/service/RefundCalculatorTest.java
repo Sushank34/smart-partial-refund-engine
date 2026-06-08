@@ -71,6 +71,16 @@ class RefundCalculatorTest {
     }
 
     @Test
+    void matchesTheBriefsWorkedExample() {
+        // Brief: order placed for $500 USD (processed 1,875 PEN @ 3.75); refund $200 USD → 750.00 PEN.
+        Breakdown b = RefundCalculator.calculate(20000,
+                splits(PaymentMethod.WALLET, 50000), new BigDecimal("3.75"));
+
+        assertEquals(20000, b.requestedDisplayMinor());   // $200.00
+        assertEquals(75000, b.requestedProcessingMinor()); // 750.00 PEN
+    }
+
+    @Test
     void appliesHistoricalExchangeRateToBothCurrencies() {
         // $200.00 at 1 USD = 3.75 PEN → 750.00 PEN, split 60/40.
         Breakdown b = RefundCalculator.calculate(20000,

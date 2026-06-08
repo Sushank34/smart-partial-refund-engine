@@ -123,6 +123,7 @@ curl http://localhost:8086/api/orders/ord_1011/refunds
   "note": null,
   "displayCurrency": "USD",
   "processingCurrency": "PEN",
+  "exchangeRate": 3.75,
   "requestedDisplayAmount": 300.00,
   "requestedProcessingAmount": 1125.00,
   "allocations": [
@@ -145,6 +146,7 @@ curl http://localhost:8086/api/orders/ord_1011/refunds
 | `VALIDATION_ERROR` | 400 | Field constraint failed (e.g. non-positive amount) |
 | `MALFORMED_REQUEST` | 400 | Unparseable body or invalid enum value |
 | `ORDER_NOT_FOUND` | 404 | No order with that id |
+| `CONCURRENT_MODIFICATION` | 409 | Another refund modified the order concurrently; retry |
 | `EXCEEDS_REFUNDABLE` | 422 | Refund would exceed the remaining balance |
 | `EXCHANGE_RATE_REQUIRED` | 422 | Rate omitted when currencies differ |
 | `INVALID_EXCHANGE_RATE` | 422 | Rate ≤ 0 |
