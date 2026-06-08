@@ -9,6 +9,18 @@ to rounding.
 
 Built for the Andino Wholesale challenge. Spring Boot 3 · Java 17 · in-memory H2 · zero external infra.
 
+## Live demo
+
+Deployed on Render: **https://smart-partial-refund-engine.onrender.com**
+
+- Swagger UI: https://smart-partial-refund-engine.onrender.com/swagger-ui.html
+- Health: https://smart-partial-refund-engine.onrender.com/health
+- Seeded orders: https://smart-partial-refund-engine.onrender.com/api/orders
+
+> Free tier: the instance sleeps after ~15 min idle, so the **first request may take 30–60s** to
+> wake it. Hit `/health` once to warm it before demoing. Data is in-memory and re-seeds (16 orders)
+> on each restart. Point the demo script at it with `BASE=https://smart-partial-refund-engine.onrender.com ./examples.sh`.
+
 ---
 
 ## Quick start (under 5 minutes)
