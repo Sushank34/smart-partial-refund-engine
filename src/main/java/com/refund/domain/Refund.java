@@ -1,6 +1,7 @@
 package com.refund.domain;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -27,6 +28,13 @@ public class Refund {
     private String id;
 
     private String orderId;
+
+    /**
+     * Caller-supplied idempotency key. A unique constraint guarantees that a retried request
+     * with the same key can never create a second refund. Null when no key was provided.
+     */
+    @Column(unique = true)
+    private String idempotencyKey;
 
     /** Requested amount in display-currency minor units. */
     private long requestedAmountMinor;
@@ -60,12 +68,14 @@ public class Refund {
     protected Refund() {
     }
 
-    public Refund(String id, String orderId, long requestedAmountMinor, long requestedProcessingMinor,
+    public Refund(String id, String orderId, String idempotencyKey,
+                  long requestedAmountMinor, long requestedProcessingMinor,
                   String displayCurrency, String processingCurrency, BigDecimal exchangeRate,
                   ReasonCode reasonCode, RefundStatus status, String note,
                   List<RefundAllocation> allocations, Instant createdAt) {
         this.id = id;
         this.orderId = orderId;
+        this.idempotencyKey = idempotencyKey;
         this.requestedAmountMinor = requestedAmountMinor;
         this.requestedProcessingMinor = requestedProcessingMinor;
         this.displayCurrency = displayCurrency;
@@ -84,6 +94,10 @@ public class Refund {
 
     public String getOrderId() {
         return orderId;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
     }
 
     public long getRequestedAmountMinor() {

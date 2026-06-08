@@ -63,8 +63,27 @@ public class RefundService {
         return refundRepository.findByOrderIdOrderByCreatedAtAsc(orderId);
     }
 
+    /** Result of a refund request: the refund, and whether it was an idempotent replay of a prior one. */
+    public record RefundOutcome(Refund refund, boolean replayed) {
+    }
+
+    /** Convenience overload with no idempotency key (used by the seeder and tests). */
     @Transactional
     public Refund requestRefund(String orderId, CreateRefundRequest req) {
+        return requestRefund(orderId, req, null).refund();
+    }
+
+    @Transactional
+    public RefundOutcome requestRefund(String orderId, CreateRefundRequest req, String idempotencyKey) {
+        // Idempotent replay: a retry with a key we've already processed returns the original refund,
+        // never a duplicate. The unique DB constraint is the backstop if two retries race.
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            var existing = refundRepository.findByIdempotencyKey(idempotencyKey);
+            if (existing.isPresent()) {
+                return new RefundOutcome(existing.get(), true);
+            }
+        }
+
         Order order = getOrder(orderId);
         long requestedMinor = Money.toMinor(req.amount());
 
@@ -93,7 +112,7 @@ public class RefundService {
         RefundStatus status = violations.isEmpty() ? RefundStatus.COMPLETED : RefundStatus.FLAGGED;
         String note = violations.isEmpty() ? null : String.join("; ", violations);
 
-        Refund refund = new Refund("rf_" + shortId(), orderId, requestedMinor,
+        Refund refund = new Refund("rf_" + shortId(), orderId, idempotencyKey, requestedMinor,
                 breakdown.requestedProcessingMinor(), order.getDisplayCurrency(), order.getProcessingCurrency(),
                 order.getExchangeRate(), req.reasonCode(), status, note, allocations, Instant.now());
         refund = refundRepository.save(refund);
@@ -101,7 +120,7 @@ public class RefundService {
         order.applyRefund(requestedMinor);
         orderRepository.save(order);
 
-        return refund;
+        return new RefundOutcome(refund, false);
     }
 
     /** Default the rate to 1 for same-currency orders; otherwise require a positive rate. */

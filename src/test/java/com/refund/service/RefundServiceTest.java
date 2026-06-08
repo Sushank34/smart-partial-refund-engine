@@ -1,7 +1,9 @@
 package com.refund.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.refund.domain.Order;
 import com.refund.domain.OrderStatus;
@@ -58,6 +60,23 @@ class RefundServiceTest {
         Order order = newOrder();
         service.requestRefund(order.getId(), new CreateRefundRequest(new BigDecimal("1000.00"), ReasonCode.PARTIAL_CANCELLATION));
         assertEquals(OrderStatus.FULLY_REFUNDED, service.getOrder(order.getId()).getStatus());
+    }
+
+    @Test
+    void replaysRefundForRepeatedIdempotencyKey() {
+        Order order = newOrder();
+        String key = "retry-abc-123";
+
+        var first = service.requestRefund(order.getId(),
+                new CreateRefundRequest(new BigDecimal("100.00"), ReasonCode.CUSTOMER_REQUEST), key);
+        var second = service.requestRefund(order.getId(),
+                new CreateRefundRequest(new BigDecimal("100.00"), ReasonCode.CUSTOMER_REQUEST), key);
+
+        assertFalse(first.replayed());
+        assertTrue(second.replayed());
+        assertEquals(first.refund().getId(), second.refund().getId());   // same refund, no duplicate
+        assertEquals(1, service.getHistory(order.getId()).size());        // only one recorded
+        assertEquals(10000, service.getOrder(order.getId()).getTotalRefundedMinor()); // balance hit once
     }
 
     @Test

@@ -131,12 +131,25 @@ curl -X POST http://localhost:8086/api/orders/{orderId}/refunds \
   -d '{ "amount": 300.00, "reasonCode": "PARTIAL_CANCELLATION" }'
 ```
 
+**Idempotency (optional but recommended):** pass an `Idempotency-Key` header. A retry with the same
+key never issues a second refund — it returns the original one (`200 OK` on replay, `201 Created` on
+first creation). This protects against double-clicks, network retries, and the duplicate-ticket
+problem from the brief.
+
+```bash
+curl -X POST http://localhost:8086/api/orders/{orderId}/refunds \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: ticket-48213' \
+  -d '{ "amount": 300.00, "reasonCode": "PARTIAL_CANCELLATION" }'
+```
+
 Response (abridged):
 
 ```json
 {
   "id": "rf_b7477d36",
   "orderId": "ord_833aa72a",
+  "idempotencyKey": "ticket-48213",
   "reasonCode": "PARTIAL_CANCELLATION",
   "status": "COMPLETED",
   "displayCurrency": "USD",
@@ -291,8 +304,27 @@ com.refund
   amount X"; modelling SKUs/quantities added complexity without scoring points.
 - **Payment-method minimums are nominal and in display currency.** Real rules are gateway- and
   currency-specific.
-- **Refunds settle synchronously and are assumed to succeed.** No async processing, gateway calls,
-  retries, or idempotency keys — out of scope for a prototype.
+- **Refunds settle synchronously and are assumed to succeed.** No async processing or real gateway
+  calls — the engine computes and records the breakdown; actually moving money is a downstream concern.
 - **In-memory H2 with `create-drop`.** Data resets each run; re-seeded on startup. No auth (per brief).
 - **`FLAGGED` refunds are still recorded.** The brief says "flag it or suggest an adjustment" — we
   flag and proceed rather than block, leaving the operational decision to a human.
+
+### What I'd add for production (deliberately out of 2-hour scope)
+
+These are conscious omissions, not oversights — each is a known next step with a clear path:
+
+- **Pagination & filtering** on `GET /api/orders` and the history endpoint — fine at demo scale,
+  necessary at Andino's 40K orders/month.
+- **Idempotency key TTL + request-fingerprint matching.** Keys are kept forever and a reused key
+  returns the original refund regardless of body; a fuller version would expire keys and return
+  `409` if the same key arrives with a *different* payload. (Basic idempotency is already implemented.)
+- **Real gateway orchestration.** Today the engine computes and records the breakdown; production
+  would dispatch each allocation to the underlying rail (wallet/card/bank) and reconcile async
+  settlement status back onto the refund.
+- **Distributed coordination.** The `@Version` optimistic lock protects a single database; a
+  multi-instance deployment behind a shared DB is already safe, but cross-service workflows would
+  want an outbox / saga for exactly-once dispatch.
+- **AuthN/Z & multi-tenancy** (per-merchant scoping) — omitted per the brief.
+- **Observability** — structured logs are in place; metrics (refund volume, FLAGGED rate, over-refund
+  attempts) and tracing would follow.

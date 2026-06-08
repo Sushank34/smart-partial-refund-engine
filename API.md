@@ -62,18 +62,25 @@ curl http://localhost:8086/api/orders/ord_1011
 Issue a partial (or full) refund. Computes the proportional, multi-currency breakdown,
 enforces the remaining-balance ceiling, and persists the audit record.
 
-**Request**
+**Headers**
+
+| Header | Required | Notes |
+| --- | --- | --- |
+| `Idempotency-Key` | no | A retry with the same key returns the original refund instead of creating a duplicate. |
+
+**Request body**
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `amount` | number | yes | > 0, in the order's display currency |
 | `reasonCode` | enum | yes | `PARTIAL_CANCELLATION` \| `ITEM_OUT_OF_STOCK` \| `DAMAGED_GOODS` \| `CUSTOMER_REQUEST` \| `OTHER` |
 
-**201 Created** → [RefundResponse](#refundresponse).
+**201 Created** on first issue, **200 OK** on idempotent replay → [RefundResponse](#refundresponse).
 
 ```bash
 curl -X POST http://localhost:8086/api/orders/ord_1011/refunds \
   -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: ticket-48213' \
   -d '{"amount":300.00,"reasonCode":"PARTIAL_CANCELLATION"}'
 ```
 
@@ -118,6 +125,7 @@ curl http://localhost:8086/api/orders/ord_1011/refunds
 {
   "id": "rf_b7477d36",
   "orderId": "ord_1011",
+  "idempotencyKey": "ticket-48213",
   "reasonCode": "PARTIAL_CANCELLATION",
   "status": "COMPLETED",
   "note": null,

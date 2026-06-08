@@ -16,6 +16,7 @@ import java.util.List;
 public record RefundResponse(
         String id,
         String orderId,
+        String idempotencyKey,
         ReasonCode reasonCode,
         RefundStatus status,
         String note,
@@ -48,6 +49,7 @@ public record RefundResponse(
         return new RefundResponse(
                 refund.getId(),
                 refund.getOrderId(),
+                refund.getIdempotencyKey(),
                 refund.getReasonCode(),
                 refund.getStatus(),
                 refund.getNote(),

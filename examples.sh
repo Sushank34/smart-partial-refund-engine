@@ -46,6 +46,19 @@ done
 echo "Full refund history for ord_1013:"
 curl -s "$BASE/api/orders/ord_1013/refunds" | pretty
 
+hr "IDEMPOTENCY — the same Idempotency-Key never issues a duplicate refund"
+KEY="demo-key-$$"
+idem_call() {  # prints "HTTP <code> id=<refund id>"
+  local code body
+  body=$(curl -s -o /tmp/idem-body.json -w '%{http_code}' -X POST "$BASE/api/orders/ord_1009/refunds" \
+    -H 'Content-Type: application/json' -H "Idempotency-Key: $KEY" \
+    -d '{ "amount": 200.00, "reasonCode": "CUSTOMER_REQUEST" }')
+  local id; id=$(command -v jq >/dev/null 2>&1 && jq -r .id /tmp/idem-body.json || cat /tmp/idem-body.json)
+  echo "  HTTP $body   id=$id"
+}
+echo "First call  with key '$KEY' (expect HTTP 201, a new refund):"; idem_call
+echo "Retry call  with SAME key            (expect HTTP 200, the SAME id — no duplicate):"; idem_call
+
 hr "ERROR HANDLING — refund more than remains (expect 422 EXCEEDS_REFUNDABLE)"
 curl -s -X POST "$BASE/api/orders/ord_1004/refunds" -H 'Content-Type: application/json' -d '{
   "amount": 999999.00, "reasonCode": "OTHER"
