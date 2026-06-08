@@ -192,6 +192,68 @@ three-way split — the canonical rounding edge case.
 
 ## Architecture & design decisions
 
+A single Spring Boot service, layered so the refund maths is isolated and pure. Requests flow
+controller → service → calculator/repositories; the calculator never touches the database.
+
+```mermaid
+flowchart TD
+    Client([HTTP client / examples.sh])
+
+    subgraph web["web — HTTP boundary"]
+        OC[OrderController]
+        RC[RefundController]
+        GEH[GlobalExceptionHandler]
+        DTO[DTOs + Money mapping]
+    end
+
+    subgraph service["service — domain logic"]
+        RS[RefundService<br/>validate · orchestrate · balance]
+        CALC[["RefundCalculator<br/>pure largest-remainder maths"]]
+    end
+
+    subgraph repo["repository — persistence"]
+        OR[OrderRepository]
+        RR[RefundRepository]
+    end
+
+    DB[("H2 in-memory<br/>orders · payment_splits<br/>refunds · refund_allocations")]
+    SEED[DataSeeder<br/>15 demo orders]
+
+    Client -->|JSON| OC & RC
+    OC --> RS
+    RC --> RS
+    RS --> CALC
+    RS --> OR & RR
+    OR --> DB
+    RR --> DB
+    SEED -.->|on startup| RS
+    GEH -.->|consistent error envelope| Client
+
+    classDef pure fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    class CALC pure
+```
+
+**Refund request flow** (`POST /api/orders/{id}/refunds`):
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant RC as RefundController
+    participant RS as RefundService
+    participant CA as RefundCalculator
+    participant DB as Repositories
+
+    C->>RC: amount + reasonCode
+    RC->>RS: requestRefund(orderId, req)
+    RS->>DB: load order (404 if missing)
+    RS->>RS: reject if amount > remaining (422 EXCEEDS_REFUNDABLE)
+    RS->>CA: calculate(amountMinor, splits, rate)
+    CA-->>RS: per-method breakdown (display + processing)
+    RS->>RS: check method minimums → COMPLETED or FLAGGED
+    RS->>DB: persist refund + allocations, update order balance
+    RS-->>C: 201 RefundResponse (both currencies)
+```
+
 ```
 com.refund
 ├── domain/      Order, PaymentSplit, Refund, RefundAllocation + enums  (entities, no logic leakage)
